@@ -23,6 +23,9 @@ class ArtificialBeeColony:
         self.available_vertices = list(self.graph.nodes)
         self.used_colors = []
 
+        self.no_improvement_counter = {node: 0 for node in self.graph.nodes}  
+        self.SCOUT_THRESHOLD = 5 
+
     def get_colors(self):
         colors = {}
         for node in self.graph.nodes:
@@ -60,6 +63,13 @@ class ArtificialBeeColony:
             random_vertex = random.choice(self.available_vertices)
             self.available_vertices.remove(random_vertex)
             chosen_vertices.append(random_vertex)
+
+            if self.no_improvement_counter[random_vertex] >= self.SCOUT_THRESHOLD:
+                self.scout_bee(random_vertex)
+                self.no_improvement_counter[random_vertex] = 0  # Reset bộ đếm sau khi scout bee tìm kiếm
+            else:
+                self.no_improvement_counter[random_vertex] += 1 
+            
         return chosen_vertices
 
     def send_onlooker_bees(self, chosen_vertices):
@@ -85,6 +95,14 @@ class ArtificialBeeColony:
                 number_of_left_onlooker_bees -= bees_for_spot
                 distribution.append(bees_for_spot)
         return distribution
+    
+    def scout_bee(self, vertex):
+        self.log(f"SCOUT BEE ACTIVATED for vertex {vertex}")
+        
+        new_color = self.get_next_color()
+        self.used_colors.append(new_color)
+        self.graph.nodes[vertex]['color'] = new_color
+        self.log(f"New color {new_color} assigned to vertex {vertex} by scout bee")
 
     def get_nectar_values(self, degrees_of_chosen_vertices):
         sum_of_degrees = sum(degrees_of_chosen_vertices)
